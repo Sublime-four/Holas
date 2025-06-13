@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Corazón de partículas - Luna</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+    }
+    #overlayText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #8A0303    ;
+      font-family: 'Arial', sans-serif;
+      font-size: 4em;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 1s;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlayText">Luna</div>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(innerWidth, innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const particleCount = 2000;
+    const positions = new Float32Array(particleCount * 3);
+    const targetPositions = [];
+    const startPositions = [];
+
+    // Generar puntos de corazón (usando fórmula matemática)
+    for (let i = 0; i < particleCount; i++) {
+      const t = Math.random() * Math.PI * 2;
+      const r = Math.random();
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+      const z = (Math.random() - 0.5) * 5;
+      targetPositions.push({ x: x * 1.5, y: y * 1.5, z });
+
+      const sx = (Math.random() - 0.5) * 100;
+      const sy = (Math.random() - 0.5) * 100;
+      const sz = (Math.random() - 0.5) * 100;
+      startPositions.push({ x: sx, y: sy, z: sz });
+
+      positions[i * 3] = sx;
+      positions[i * 3 + 1] = sy;
+      positions[i * 3 + 2] = sz;
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const material = new THREE.PointsMaterial({ color: 0x8A0303, size: 0.3 });
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
+    camera.position.z = 60;
+
+    let forming = true;
+    let progress = 0;
+    const overlay = document.getElementById('overlayText');
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const pos = geometry.attributes.position.array;
+
+      for (let i = 0; i < particleCount; i++) {
+        const from = forming ? startPositions[i] : targetPositions[i];
+        const to = forming ? targetPositions[i] : startPositions[i];
+
+        pos[i * 3] = THREE.MathUtils.lerp(from.x, to.x, progress);
+        pos[i * 3 + 1] = THREE.MathUtils.lerp(from.y, to.y, progress);
+        pos[i * 3 + 2] = THREE.MathUtils.lerp(from.z, to.z, progress);
+      }
+
+      progress += 0.01;
+      if (progress >= 1) {
+        progress = 1;
+        if (forming) overlay.style.opacity = 1;
+      }
+
+      geometry.attributes.position.needsUpdate = true;
+      points.rotation.y += 0.002;
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Click para alternar entre explotar y formar
+    document.body.addEventListener('click', () => {
+      forming = !forming;
+      progress = 0;
+      overlay.style.opacity = forming ? 0 : 0;
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>

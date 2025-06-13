@@ -66,10 +66,17 @@
     scene.add(points);
 
     camera.position.z = 60;
+    
+let forming = false; // <--- Comenzamos en modo disperso
+let progress = 0;
+const overlay = document.getElementById('overlayText');
 
-    let forming = true;
-    let progress = 0;
-    const overlay = document.getElementById('overlayText');
+// Después de 3 segundos, empieza a formar el corazón
+setTimeout(() => {
+  forming = true;
+  progress = 0;
+}, 3000); // 3000 ms = 3 segundos
+
 
     function animate() {
       requestAnimationFrame(animate);
